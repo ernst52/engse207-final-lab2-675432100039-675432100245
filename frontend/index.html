@@ -1269,6 +1269,7 @@
 ════════════════════════════════════ -->
 
     <script>
+      console.log('Haré+Guu');
       /* ── STATE ── */
       const API = ""; // ใช้ relative URL (Nginx จัดการ)
       let token = localStorage.getItem("jwt_token");
@@ -1683,7 +1684,11 @@
    PROFILE
 ───────────────────────────────────── */
       async function loadProfile() {
-        const u = currentUser;
+        const res = await apiFetch(`${API}/api/users/me`, {
+          headers: authHeaders(),
+        });
+        const data = await res.json();
+        const u = data.user || currentUser;
         if (!u) return;
 
         const initial = (u.name || u.email || "?").charAt(0).toUpperCase();

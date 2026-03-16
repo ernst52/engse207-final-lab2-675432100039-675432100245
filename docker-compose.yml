@@ -70,8 +70,9 @@ services:
   # ── Frontend (Static) ────────────────────────────────────────────────
   frontend:
     build: ./frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html
     networks: [taskboard-net]
-
   # ── Nginx (API Gateway + TLS) ────────────────────────────────────────
   nginx:
     build: ./nginx
