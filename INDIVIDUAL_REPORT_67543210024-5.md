@@ -4,33 +4,43 @@
 
 | รายการ | ข้อมูล |
 |--------|--------|
-| ชื่อ-นามสกุล | สิริ รัตนรินทร์ |
+| ชื่อ-นามสกุล | นายสิริ รัตนรินทร์ |
 | รหัสนักศึกษา | 67543210024-5 |
-| Section | 1|
+| Section | 2 |
 | GitHub Username | siri-se |
 
 ---
 
 ## 2. ส่วนที่รับผิดชอบ
 
-- เพิ่ม Register API ใน Auth Service
-- พัฒนา User Service สำหรับจัดการโปรไฟล์ผู้ใช้
-- แยกฐานข้อมูลออกเป็น 3 ชุด (auth-db, task-db, user-db)
-- ปรับ Docker Compose สำหรับ Multi-Database Architecture
-- ปรับ Frontend เพิ่ม Register Form และ Profile Page
+- Deploy Auth Service, Task Service และ User Service พร้อม Database แต่ละตัวขึ้น Railway
+- ตั้งค่า Environment Variables บน Railway ให้ถูกต้องทุก service
+- ทดสอบ Test Cases T1–T10 บน Cloud URL จริง
+- จัดทำ README.md, TEAM_SPLIT.md และ INDIVIDUAL_REPORT
+- ถ่าย Screenshots ประกอบการส่งงาน
 
 ---
 
 ## 3. สิ่งที่ได้ลงมือพัฒนาด้วยตนเอง
 
-- เพิ่ม `POST /api/auth/register` ใน `auth-service/src/routes/auth.js` พร้อม bcrypt hash และ logEvent
-- เขียน `user-service` ทั้งหมด ได้แก่ `index.js`, `db/db.js`, `routes/users.js`, `middleware/authMiddleware.js`, `middleware/jwtUtils.js`
-- เขียน `GET /api/users/me` ที่ auto-create profile จาก JWT data หากยังไม่มีใน user_profiles
-- เขียน `GET /api/users/` สำหรับ admin ดู users ทั้งหมด
-- แยก `db/init.sql` ออกเป็น `db/auth.sql`, `db/task.sql`, `db/user.sql`
-- ปรับ `docker-compose.yml` เพิ่ม auth-db, task-db, user-db แทน postgres ตัวเดียว
-- ปรับ `nginx/nginx.conf` เพิ่ม location `/api/users/`
-- ปรับ `frontend/index.html` เพิ่ม tab switcher, register form และแก้ `loadProfile()`
+### Railway Deployment
+
+นำโค้ดที่เพื่อน (นายปรานต์) พัฒนาไว้ขึ้น Railway โดยทำ 3 service ครบ
+
+- สร้าง Railway Project และเชื่อมต่อกับ GitHub Repository
+- กำหนด Root Directory ให้แต่ละ service ถูกต้อง (`auth-service`, `task-service`, `user-service`)
+- เพิ่ม PostgreSQL Plugin และเชื่อมต่อ `DATABASE_URL` ให้แต่ละ service
+- Generate Domain ให้ทุก service
+
+### แก้ปัญหาระหว่าง Deploy
+
+- พบว่า `db.js` ทุก service ยังใช้ `DB_HOST` แบบ local Docker อยู่ ทำให้ connect ไม่ได้บน Railway แก้ไขโดยเพิ่ม logic รองรับ `DATABASE_URL` เมื่อ deploy บน Cloud
+- พบว่า Nginx ชี้ไปที่ `user-service:3004` แต่ service รันที่ port 3003 แก้ nginx.conf ให้ถูกต้อง
+- พบว่า `user_profiles` table ขาด column `display_name` แก้ไข `db/user.sql` และ reset database
+
+### Integration Testing บน Cloud
+
+ทดสอบ T1–T10 ครบทุกข้อบน Railway URL จริง ด้วย Postman
 
 ---
 
@@ -38,28 +48,27 @@
 
 | ปัญหา | วิธีการแก้ไข |
 |-------|-------------|
-| `npm ci` ล้มเหลวใน user-service เพราะไม่มี `package-lock.json` | รัน `npm install` ใน user-service ก่อน build |
-| Database ไม่ start เพราะ `init.sql` เป็น directory ไม่ใช่ไฟล์ | สร้างไฟล์ `db/auth.sql`, `db/task.sql`, `db/user.sql` ให้ถูกต้อง |
-| `GET /api/tasks/` return 500 เพราะ JOIN กับ `users` table ที่อยู่ใน auth-db | ลบ JOIN ออก เนื่องจากแต่ละ service มี DB แยกกัน |
-| `/api/users/me` return 404 เพราะยังไม่มีแถวใน `user_profiles` | เพิ่ม auto-create profile ใน `/me` route หากไม่พบข้อมูล |
-| Role ไม่แสดงใน Profile page เพราะ `user_profiles` ไม่มี column `role` | ใช้ `currentUser.role` จาก JWT แทน |
-| Register form ใช้ `reg-name` แต่ `doRegister()` อ่าน `reg-username` | แก้ HTML input id ให้ตรงกัน |
+| auth-service บน Railway ขึ้น `ENOTFOUND auth-db` | แก้ `db.js` ทุก service ให้ใช้ `DATABASE_URL` เมื่อมีการตั้งค่าบน Railway |
+| JWT invalid signature ตอนทดสอบ task-service | token ที่ใช้มาจาก local ซึ่งใช้ JWT_SECRET ต่างกัน แก้โดย login ใหม่บน Railway แล้วใช้ token นั้น |
+| GET /api/users/ ได้ 500 Server error | query ดึง `created_at` แต่ตาราง `user_profiles` ไม่มี column นั้น แก้เป็น `updated_at` แทน |
+| Nginx 502 ตอนเรียก /api/users/ | nginx.conf ชี้ไปที่ port 3004 แต่ user-service รันที่ 3003 แก้ port ให้ตรง |
+| admin login ไม่ได้บน Railway | Railway ไม่มี seed users ต้อง register แล้วแก้ role เป็น admin ผ่าน Railway Database Query |
 
 ---
 
 ## 5. สิ่งที่ได้เรียนรู้จากงานนี้
 
-- เข้าใจการออกแบบ Database per Service ใน Microservices และผลกระทบต่อ Cross-service Query
-- เข้าใจว่าเมื่อแยก DB แล้วไม่สามารถใช้ Foreign Key ข้าม Service ได้ ต้องใช้ user_id จาก JWT แทน
-- เรียนรู้การ Auto-provision ข้อมูลเมื่อ Service ใหม่ถูกเรียกครั้งแรก
-- เข้าใจการ Debug Microservices ด้วย `docker logs` และการตรวจสอบ DB โดยตรงด้วย `psql`
-- เรียนรู้การจัดการ nginx routing สำหรับหลาย Service
+แต่ละ service มี DB แยกกัน ทำให้ไม่สามารถ JOIN ข้าม database ได้ ต้องใช้ `user_id` จาก JWT เป็น logical reference แทน
+
+Cloud environment ต่างจาก local อย่างมาก ต้องใช้ `DATABASE_URL` + SSL แทน `DB_HOST/PORT` และแต่ละ service ต้อง init schema ได้เองตอน start
+
+`JWT_SECRET` ต้องเหมือนกันทุก service เพราะทุก service verify token เอง ถ้าต่างกันแม้แค่ตัวเดียวจะ verify ไม่ผ่าน
 
 ---
 
-## 6. แนวทางที่ต้องการพัฒนาต่อ
+## 6. ส่วนที่ยังไม่สมบูรณ์หรืออยากปรับปรุง
 
-- เพิ่ม `PUT /api/users/me` สำหรับแก้ไขโปรไฟล์
-- Deploy ขึ้น Railway และทดสอบ end-to-end บน Cloud
-- เพิ่ม Refresh Token เพื่อจัดการ Session ที่หมดอายุ
-- ปรับปรุง Log Dashboard ให้ Filter และ Search ได้
+- **Log Service** ถูกตัดออกใน Set 2 ทำให้ `logs.html` ไม่ทำงาน อยากปรับปรุงให้แต่ละ service มี logging ของตัวเองแบบ lightweight เหมือน Set 1
+- **Admin user** ต้องสร้างผ่าน SQL query โดยตรง อยากเพิ่ม seed script สำหรับ admin บน Railway
+- **Frontend config.js** ต้องแก้ URL ด้วยมือทุกครั้งที่ redeploy อยากทำให้ dynamic มากขึ้น
+- **Cross-service data consistency** ถ้า user ถูกลบจาก auth-db ข้อมูลใน task-db และ user-db จะยังคงอยู่ อยากเพิ่ม cleanup mechanism
