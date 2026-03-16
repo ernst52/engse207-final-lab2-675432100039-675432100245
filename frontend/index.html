@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="th">
   <head>
+    <script src="/config.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="engse207-frontend-health" content="frontend-ok">
@@ -1299,7 +1300,9 @@
     <script>
       console.log("Haré+Guu");
       /* ── STATE ── */
-      const API = ""; // ใช้ relative URL (Nginx จัดการ)
+      const AUTH_URL = window.APP_CONFIG?.AUTH_URL || 'http://localhost:3001';
+      const TASK_URL = window.APP_CONFIG?.TASK_URL || 'http://localhost:3002';
+      const USER_URL = window.APP_CONFIG?.USER_URL || 'http://localhost:3003';
       let token = localStorage.getItem("jwt_token");
       let currentUser = null;
       let allTasks = [];
@@ -1391,7 +1394,7 @@
           return;
         }
 
-        const res = await fetch(`${API}/api/auth/login`, {
+        const res = await fetch(`${AUTH_URL}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -1421,7 +1424,7 @@
           return;
         }
 
-        const res = await fetch(`${API}/api/auth/register`, {
+        const res = await fetch(`${AUTH_URL}/api/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, email, password }),
@@ -1486,7 +1489,7 @@
    TASKS — LOAD & RENDER
 ───────────────────────────────────── */
       async function loadTasks() {
-        const res = await apiFetch(`${API}/api/tasks/`, {
+        const res = await apiFetch(`${TASK_URL}/api/tasks/`, {
           headers: authHeaders(),
         });
         const data = await res.json();
@@ -1633,14 +1636,14 @@
         let res;
         if (id) {
           // PUT — update existing
-          res = await apiFetch(`${API}/api/tasks/${id}`, {
+          res = await apiFetch(`${TASK_URL}/api/tasks/${id}`, {
             method: "PUT",
             headers: authHeaders(),
             body: JSON.stringify(body),
           });
         } else {
           // POST — create new
-          res = await apiFetch(`${API}/api/tasks/`, {
+          res = await apiFetch(`${TASK_URL}/api/tasks/`, {
             method: "POST",
             headers: authHeaders(),
             body: JSON.stringify(body),
@@ -1667,7 +1670,7 @@
       }
 
       async function quickStatusUpdate(id, newStatus) {
-        const res = await apiFetch(`${API}/api/tasks/${id}`, {
+        const res = await apiFetch(`${TASK_URL}/api/tasks/${id}`, {
           method: "PUT",
           headers: authHeaders(),
           body: JSON.stringify({ status: newStatus }),
@@ -1688,7 +1691,7 @@
         deleteTargetId = id;
         document.getElementById("confirm-modal").classList.remove("hidden");
         document.getElementById("confirm-delete-btn").onclick = async () => {
-          const res = await apiFetch(`${API}/api/tasks/${deleteTargetId}`, {
+          const res = await apiFetch(`${TASK_URL}/api/tasks/${deleteTargetId}`, {
             method: "DELETE",
             headers: authHeaders(),
           });
@@ -1718,7 +1721,7 @@
    USERS
 ───────────────────────────────────── */
       async function loadUsers() {
-        const res = await apiFetch(`${API}/api/users/`, {
+        const res = await apiFetch(`${USER_URL}/api/users/`, {
           headers: authHeaders(),
         });
         const data = await res.json();
@@ -1764,7 +1767,7 @@
    PROFILE
 ───────────────────────────────────── */
       async function loadProfile() {
-        const res = await apiFetch(`${API}/api/users/me`, {
+        const res = await apiFetch(`${USER_URL}/api/users/me`, {
           headers: authHeaders(),
         });
         const data = await res.json();
@@ -1850,7 +1853,7 @@
       /* ── AUTO-LOGIN ── */
       if (token) {
         (async () => {
-          const res = await fetch(`${API}/api/auth/verify`, {
+          const res = await fetch(`${AUTH_URL}/api/auth/verify`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const data = await res.json();
