@@ -32,10 +32,11 @@ router.get('/me', requireAuth, async (req, res) => {
 router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, user_id, username, email, role, created_at FROM user_profiles ORDER BY created_at DESC'
+      'SELECT id, user_id, username, email, role, updated_at FROM user_profiles ORDER BY updated_at DESC'
     );
     res.json({ users: result.rows, total: result.rowCount });
   } catch (err) {
+    console.error('[USER] GET / error:', err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });
