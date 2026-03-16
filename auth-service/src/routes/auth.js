@@ -236,4 +236,26 @@ router.get("/health", (req, res) => {
   res.json({ status: "ok", service: "auth-service", time: new Date() });
 });
 
+// ─────────────────────────────────────────────
+// GET /api/auth/me  (ต้องมี JWT)
+// ─────────────────────────────────────────────
+router.get('/me', async (req, res) => {
+  const token = (req.headers['authorization'] || '').split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const decoded = verifyToken(token);
+    const result  = await pool.query(
+      'SELECT id, username, email, role, created_at, last_login FROM users WHERE id = $1',
+      [decoded.sub]
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    return res.json({ user: result.rows[0] });
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
 module.exports = router;
