@@ -38,17 +38,17 @@ router.get('/', async (req, res) => {
     let result;
     if (req.user.role === 'admin') {
       result = await pool.query(`
-        SELECT t.*, u.username FROM tasks t
-        JOIN users u ON t.user_id = u.id
-        ORDER BY t.created_at DESC`);
+        SELECT * FROM tasks
+        ORDER BY created_at DESC`);
     } else {
       result = await pool.query(`
-        SELECT t.*, u.username FROM tasks t
-        JOIN users u ON t.user_id = u.id
-        WHERE t.user_id = $1 ORDER BY t.created_at DESC`, [req.user.sub]);
+        SELECT * FROM tasks
+        WHERE user_id = $1
+        ORDER BY created_at DESC`, [req.user.sub]);
     }
     res.json({ tasks: result.rows, count: result.rowCount });
   } catch (err) {
+    console.error('[task-service] GET error:', err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });

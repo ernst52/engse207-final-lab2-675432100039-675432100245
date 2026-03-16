@@ -3,7 +3,6 @@ const express = require('express');
 const cors    = require('cors');
 const morgan  = require('morgan');
 const { initDB } = require('./db/db');
-const { seedUsers } = require('./db/seed');   // ← ✨ v2.0: เพิ่ม seed
 const authRoutes = require('./routes/auth');
 
 const app  = express();
@@ -27,7 +26,6 @@ async function start() {
   while (retries > 0) {
     try {
       await initDB();
-      await seedUsers();   // ← ✨ v2.0: สร้าง test users หลัง table พร้อม
       break;
     } catch (err) {
       console.log(`[auth-service] Waiting for DB... (${retries} retries left): ${err.message}`);
