@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>👤 Profile — Final Lab Set 2</title>
+  <!-- copy CSS จาก index.html -->
+</head>
+<body>
+<script src="config.js"></script>
+<script>
+const USER = window.APP_CONFIG.USER_URL;
+const token = localStorage.getItem('jwt_token');
+
+async function loadProfile() {
+  const res  = await fetch(`${USER}/api/users/me`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json();
+  // แสดงข้อมูล profile ใน form
+  document.getElementById('display_name').value = data.profile.display_name || '';
+  document.getElementById('bio').value           = data.profile.bio || '';
+}
+
+async function updateProfile() {
+  const display_name = document.getElementById('display_name').value;
+  const bio          = document.getElementById('bio').value;
+  const res = await fetch(`${USER}/api/users/me`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ display_name, bio })
+  });
+  const data = await res.json();
+  if (res.ok) alert('อัปเดต Profile สำเร็จ!');
+}
+
+loadProfile();
+</script>
+</body>
+</html>
