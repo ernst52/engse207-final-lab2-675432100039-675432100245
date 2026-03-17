@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+  <script src="/config.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>📊 Log Dashboard — Final Lab</title>
@@ -149,7 +150,7 @@
 </div>
 
 <script>
-const API = '';
+const AUTH_URL = window.APP_CONFIG?.AUTH_URL || 'http://localhost:3001';
 let token        = localStorage.getItem('jwt_token');
 let autoRefresh  = true;
 let refreshTimer = null;
@@ -159,7 +160,7 @@ let allLogs      = [];
 async function dashLogin() {
   const email    = document.getElementById('l-email').value.trim();
   const password = document.getElementById('l-pass').value;
-  const res  = await fetch(`${API}/api/auth/login`, {
+  const res  = await fetch(`${AUTH_URL}/api/auth/login`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
   });
@@ -188,7 +189,7 @@ function authHeaders() {
 
 // ── Stats ─────────────────────────────────────────────
 async function loadStats() {
-  const res  = await fetch(`${API}/api/logs/stats`, { headers: authHeaders() });
+  const res  = await fetch(`${AUTH_URL}/api/logs/stats`, { headers: authHeaders() });
 
   if (res.status === 403) {
     document.getElementById('log-rows').innerHTML =
@@ -221,7 +222,7 @@ async function loadLogs() {
   if (service) params.set('service', service);
   if (level)   params.set('level',   level);
 
-  const res  = await fetch(`${API}/api/logs/?${params}`, { headers: authHeaders() });
+  const res  = await fetch(`${AUTH_URL}/api/logs/?${params}`, { headers: authHeaders() });
   if (res.status === 401) {
     document.getElementById('login-overlay').style.display = 'flex';
     return;
@@ -305,7 +306,7 @@ function clearFilters() {
 // ── Init ──────────────────────────────────────────────
 if (token) {
   (async () => {
-    const res = await fetch(`${API}/api/auth/verify`, {
+    const res = await fetch(`${AUTH_URL}/api/auth/verify`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
