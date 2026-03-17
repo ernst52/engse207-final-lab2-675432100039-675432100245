@@ -1787,7 +1787,7 @@
         const role = u.role || currentUser?.role || '—';
         const initial = (u.username || u.email || "?").charAt(0).toUpperCase();
         document.getElementById("prof-avatar").textContent = initial;
-        document.getElementById("prof-name").textContent = u.username || "—";
+        document.getElementById("prof-name").textContent = u.display_name || u.username || "—";
         document.getElementById("prof-email").textContent = u.email;
         document.getElementById("prof-id").textContent =
           u.user_id || u.id || "—";
